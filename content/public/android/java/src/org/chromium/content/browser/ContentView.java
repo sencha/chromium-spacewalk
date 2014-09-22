@@ -157,6 +157,7 @@ public class ContentView extends FrameLayout
 
     @Override
     public boolean performLongClick() {
+        showContextMenu();
         return false;
     }
 
