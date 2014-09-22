@@ -89,6 +89,7 @@ import org.chromium.ui.base.ime.TextInputType;
 import org.chromium.ui.gfx.DeviceDisplayInfo;
 import org.chromium.ui.touch_selection.SelectionEventType;
 
+import java.lang.Runnable;
 import java.lang.annotation.Annotation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -575,6 +576,10 @@ public class ContentViewCore
     // On tap this will store the x, y coordinates of the touch.
     private int mLastTapX;
     private int mLastTapY;
+
+    // On down this will store the x, y coordinates of the last MotionEvent.Action_Down.
+    private int mLastDownX;
+    private int mLastDownY;
 
     // Whether a touch scroll sequence is active, used to hide text selection
     // handles. Note that a scroll sequence will *always* bound a pinch
@@ -1176,6 +1181,12 @@ public class ContentViewCore
         return onTouchEventImpl(event, isTouchHandleEvent);
     }
 
+    private Runnable onEventRunnable;
+
+    public void setOnEventRunnable(Runnable runnable){
+        onEventRunnable = runnable;
+    }
+
     private boolean onTouchEventImpl(MotionEvent event, boolean isTouchHandleEvent) {
         TraceEvent.begin("onTouchEvent");
         try {
@@ -1197,6 +1208,15 @@ public class ContentViewCore
             if (mCurrentTouchOffsetX != 0 || mCurrentTouchOffsetY != 0) {
                 offset = createOffsetMotionEvent(event);
                 event = offset;
+            }
+
+            if (eventAction == MotionEvent.ACTION_DOWN) {
+                mLastDownX = (int) event.getX();
+                mLastDownY = (int) event.getY();
+
+                if (onEventRunnable != null) {
+                    onEventRunnable.run();
+                }
             }
 
             final int pointerCount = event.getPointerCount();
@@ -1333,6 +1353,8 @@ public class ContentViewCore
     @CalledByNative
     private boolean filterTapOrPressEvent(int type, int x, int y) {
         if (type == GestureEventType.LONG_PRESS && offerLongPressToEmbedder()) {
+            mLastTapX = (int) x;
+            mLastTapY = (int) y;
             return true;
         }
         updateForTapOrPress(type, x, y);
@@ -3163,6 +3185,13 @@ public class ContentViewCore
     public void setContextualSearchClient(ContextualSearchClient contextualSearchClient) {
         mContextualSearchClient = contextualSearchClient;
     }
+
+    public int getLastDownX() {
+        return mLastDownX;
+    }
+
+    public int getLastDownY() {
+        return mLastDownY;
 
     private native WebContents nativeGetWebContentsAndroid(long nativeContentViewCoreImpl);
 
