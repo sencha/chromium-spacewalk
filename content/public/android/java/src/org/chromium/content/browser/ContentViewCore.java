@@ -3192,6 +3192,7 @@ public class ContentViewCore
 
     public int getLastDownY() {
         return mLastDownY;
+    }
 
     private native WebContents nativeGetWebContentsAndroid(long nativeContentViewCoreImpl);
 
