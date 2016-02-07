@@ -1210,15 +1210,6 @@ public class ContentViewCore
                 event = offset;
             }
 
-            if (eventAction == MotionEvent.ACTION_DOWN) {
-                mLastDownX = (int) event.getX();
-                mLastDownY = (int) event.getY();
-
-                if (onEventRunnable != null) {
-                    onEventRunnable.run();
-                }
-            }
-
             final int pointerCount = event.getPointerCount();
             final boolean consumed = nativeOnTouchEvent(mNativeContentViewCore, event,
                     event.getEventTime(), eventAction,
@@ -1236,6 +1227,15 @@ public class ContentViewCore
                     event.getButtonState(),
                     event.getMetaState(),
                     isTouchHandleEvent);
+                    
+                if (eventAction == MotionEvent.ACTION_DOWN) {
+                        mLastDownX = (int) event.getX();
+                        mLastDownY = (int) event.getY();
+        
+                        if (onEventRunnable != null) {
+                            onEventRunnable.run();
+                        }
+            }
 
             if (offset != null) offset.recycle();
             return consumed;
@@ -3192,6 +3192,7 @@ public class ContentViewCore
 
     public int getLastDownY() {
         return mLastDownY;
+    }
 
     private native WebContents nativeGetWebContentsAndroid(long nativeContentViewCoreImpl);
 
